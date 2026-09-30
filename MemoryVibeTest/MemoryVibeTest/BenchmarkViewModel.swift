@@ -6,7 +6,7 @@ import MemoryBenchCore
 struct BenchmarkResultGroup: Identifiable {
     let id: Int
     let sizeLabel: String
-    let measurements: [Measurement]
+    let measurements: [MemoryBenchCore.Measurement]
 }
 
 @MainActor
@@ -71,7 +71,7 @@ final class BenchmarkViewModel: ObservableObject {
         }
     }
 
-    private static func group(measurements: [Measurement], selections: [SizeSelection]) -> [BenchmarkResultGroup] {
+    private static func group(measurements: [MemoryBenchCore.Measurement], selections: [SizeSelection]) -> [BenchmarkResultGroup] {
         let perSize = Operation.allCases.count
         return selections.enumerated().map { index, selection in
             let start = index * perSize
@@ -83,11 +83,11 @@ final class BenchmarkViewModel: ObservableObject {
 }
 
 enum MeasurementFormatting {
-    static func gigabytesPerSecond(_ measurement: Measurement) -> String {
+    static func gigabytesPerSecond(_ measurement: MemoryBenchCore.Measurement) -> String {
         String(format: "%.2f GB/s", measurement.bytesPerSecond / 1_000_000_000.0)
     }
 
-    static func nanosecondsPerElement(_ measurement: Measurement) -> String {
+    static func nanosecondsPerElement(_ measurement: MemoryBenchCore.Measurement) -> String {
         String(format: "%.2f ns/elem", measurement.nanosecondsPerElement)
     }
 }
