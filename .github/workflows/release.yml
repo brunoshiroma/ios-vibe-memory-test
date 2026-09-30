@@ -1,0 +1,62 @@
+name: Release IPA
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-ipa:
+    name: Build unsigned IPA
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive app
+        run: |
+          xcodebuild archive \
+            -project MemoryVibeTest/MemoryVibeTest.xcodeproj \
+            -scheme MemoryVibeTest \
+            -configuration Release \
+            -archivePath build/MemoryVibeTest.xcarchive \
+            -destination "generic/platform=iOS" \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          payload_dir="build/Payload"
+          mkdir -p "$payload_dir"
+          cp -R "build/MemoryVibeTest.xcarchive/Products/Applications/MemoryVibeTest.app" "$payload_dir/"
+          (cd build && zip -r -y "MemoryVibeTest-${GITHUB_REF_NAME}.ipa" Payload)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MemoryVibeTest-ipa
+          path: build/MemoryVibeTest-*.ipa
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub release
+    needs:
+      - build-ipa
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
+          fi

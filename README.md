@@ -30,3 +30,12 @@ units accepted by the `rust-vibe-memory-test` CLI's `--sizes` flag. You can add 
 sizes as you like, remove any of them, choose the number of iterations, then run the
 benchmark to see per-size throughput (GB/s) and per-element latency (ns/element) for
 each operation (read, write, copy, pointer-chase).
+
+## Releases
+
+Pushing any Git tag triggers the `.github/workflows/release.yml` workflow, which
+archives the `MemoryVibeTest` app on macOS runners (unsigned, since no Apple
+Developer signing identity is configured), packages it as an `.ipa`, and attaches it
+to a GitHub release for that tag (creating the release if it doesn't already exist).
+Since the IPA is unsigned, installing it on a device requires resigning it with your
+own Apple Developer certificate and provisioning profile.
